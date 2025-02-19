@@ -27581,19 +27581,30 @@ class RELEASE{
 
   #list = {};
   #regExp = {
-    log:null
+    log:null,
+    unsorted:null,
+    blacklist:null,
   };
   #log = '';
+  #blacklist = [
+    `merge branch 'master'`,
+  ]
   
   constructor(opt = {}){
-    const a = [];
+    const aTypes = [];
     for(const type in this.#types){
       this.#list[type] = [];
-      a.push(type);
+      aTypes.push(type);
     }
 
-    this.#regExp.log = new RegExp(`^(\\S{7})\\s+\\[(${a.join('|')})\\]\\s+(.+)\\s*`, 'igm');
-    this.#regExp.unsorted = new RegExp(`^(\\S{7})\\s+(?!\\[(${a.join('|')})\\]\\s+)(.+)\\s*`, 'igm');
+    const aBlacklist = [];
+    for(const ignore of this.#blacklist){
+      aBlacklist.push(ignore);
+    }
+
+    this.#regExp.log = new RegExp(`^(\\S{7})\\s+\\[(${aTypes.join('|')})\\]\\s+(.+)\\s*`, 'igm');
+    this.#regExp.unsorted = new RegExp(`^(\\S{7})\\s+(?!\\[(${aTypes.join('|')})\\]\\s+)(.+)\\s*`, 'igm');
+    this.#regExp.blacklist = new RegExp(`(${aBlacklist.join('|')})`, 'i');
 
     this.#parseInputs(opt);
     this.#create();
@@ -27602,27 +27613,35 @@ class RELEASE{
   #parseInputs(opt){
     if(opt?.git_log){
       this.#log = `${opt.git_log}`;
-
+      
       const aMatches = [...this.#log.matchAll(this.#regExp.log)];
       if(aMatches && aMatches.length > 0){
         for(const match of aMatches){
-          const log = {
-            hash:match[1],
-            type:`${match[2]}`.toLowerCase(),
-            message:match[3],
+          if(!this.#regExp.blacklist.test(match[0])){
+            const log = {
+              hash:match[1],
+              type:`${match[2]}`.toLowerCase(),
+              message:match[3],
+            }
+            this.#list[log.type].push(`* ${log.message} - ${log.hash}`);
+          }else{
+            core.info(`blacklisted commit ${match[1]} "${match[3]}"`)
           }
-          this.#list[log.type].push(`* ${log.message} - ${log.hash}`);
         }
       }
 
       const aMatchesUnsorted = [...this.#log.matchAll(this.#regExp.unsorted)];
       if(aMatchesUnsorted && aMatchesUnsorted.length > 0){
         for(const match of aMatchesUnsorted){
-          const log = {
-            hash:match[1],
-            message:match[3],
+          if(!this.#regExp.blacklist.test(match[0])){
+            const log = {
+              hash:match[1],
+              message:match[3],
+            }
+            this.#list.unsorted.push(`* ${log.message} - ${log.hash}`);
+          }else{
+            core.info(`blacklisted commit ${match[1]} "${match[3]}"`)
           }
-          this.#list.unsorted.push(`* ${log.message} - ${log.hash}`);
         }
       }
     }
