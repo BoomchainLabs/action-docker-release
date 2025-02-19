@@ -27620,7 +27620,7 @@ class RELEASE{
         for(const match of aMatchesUnsorted){
           const log = {
             hash:match[1],
-            message:match[2],
+            message:match[3],
           }
           this.#list.unsorted.push(`* ${log.message} - ${log.hash}`);
         }
