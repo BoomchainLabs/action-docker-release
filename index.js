@@ -76,11 +76,10 @@ class RELEASE{
     }
 
     if(release.length > 0){
-      fs.writeFileSync('./RELEASE.md', release.join("\r\n"));
+      core.exportVariable('WORKFLOW_GITHUB_RELEASE', 'true');
+      core.setOutput('release', release.join("\r\n"));
     }else{
-      if(fs.existsSync('./RELEASE.md')){
-        fs.unlinkSync('./RELEASE.md');
-      }
+      core.exportVariable('WORKFLOW_GITHUB_RELEASE', 'false');
     }
   }
 }
