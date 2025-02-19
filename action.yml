@@ -1,0 +1,13 @@
+name: 'action-docker-release'
+author: '11notes'
+description: 'This action will create a RELEASE.md based on commits and their attributes'
+branding:
+  icon: 'book-open'
+  color: 'blue'
+inputs:
+  git_log: 
+    description: 'git log of commits to check'
+    required: true
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
