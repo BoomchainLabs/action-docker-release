@@ -28,5 +28,5 @@ This action will create a RELEASE.md based on commits and their attributes.
 - name: github / create RELEASE.md
   uses: 11notes/action-docker-release@v1
   with:
-    git_log: ${{ steps.commit.outputs.commits }}
+    git_log: ${{ steps.git-log.outputs.commits }}
 ```
