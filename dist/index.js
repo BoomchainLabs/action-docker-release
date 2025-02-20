@@ -27588,6 +27588,7 @@ class RELEASE{
   #log = '';
   #blacklist = [
     `merge branch 'master'`,
+    `auto update README\\.md`,
   ]
   
   constructor(opt = {}){
