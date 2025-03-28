@@ -5,12 +5,16 @@ const core = require('@actions/core');
 class RELEASE{
   #types = {
     breaking:{title:'# 🚨 Breaking'},
+    break:{ref:'breaking'},
     fix:{title:'# 🩹 Fix'},
     feature:{title:'# 🪄 Feature'},
+    add:{ref:'feature'},
     upgrade:{title:'# 🚀 Upgrade'},
+    update:{ref:'upgrade'},
     cut:{title:'# ✂️ Cut'},
+    remove:{ref:'cut'},
+    del:{ref:'cut'},
     comment:{title:'# ⌨️ Comment'},
-
     unsorted:{title:'# 💀 Unsorted'}
   }
 
@@ -58,6 +62,9 @@ class RELEASE{
               hash:match[1],
               type:`${match[2]}`.toLowerCase(),
               message:match[3],
+            }
+            if(this.#types[log.type]?.ref){
+              log.type = this.#types[log.type].ref;
             }
             this.#list[log.type].push(`* ${log.message} - ${log.hash}`);
           }else{
