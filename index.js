@@ -7,15 +7,15 @@ class RELEASE{
     breaking:{title:'# 🚨 Breaking'},
     break:{ref:'breaking'},
     fix:{title:'# 🩹 Fix'},
-    feature:{title:'# 🪄 Feature'},
+    feature:{title:'# 🎀 Feature'},
     add:{ref:'feature'},
     upgrade:{title:'# 🚀 Upgrade'},
     update:{ref:'upgrade'},
     cut:{title:'# ✂️ Cut'},
     remove:{ref:'cut'},
     del:{ref:'cut'},
-    comment:{title:'# ⌨️ Comment'},
-    unsorted:{title:'# 💀 Unsorted'}
+    comment:{title:'# 🎤 Comment'},
+    unsorted:{title:'# 📘 Unsorted'}
   }
 
   #list = {};
