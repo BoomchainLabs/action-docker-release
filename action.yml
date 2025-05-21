@@ -1,13 +1,55 @@
-name: 'action-docker-release'
-author: '11notes'
-description: 'This action will create release markdown based on commits and their attributes.'
+name: 'boom-base-ci'
+author: 'Boomchainlab'
+description: >
+  A reusable base CI action for linting, testing, building, and validating pull requests 
+  across Boomchainlab repositories. Designed to integrate seamlessly with modular workflows.
+
 branding:
-  icon: 'award'
-  color: 'purple'
+  icon: 'check-circle'
+  color: 'blue'
+
 inputs:
-  git_log: 
-    description: 'git log of commits to check'
-    required: true
+  node-version:
+    description: 'The Node.js version to use.'
+    required: false
+    default: '20'
+
+  run-tests:
+    description: 'Whether to run tests. Set to "true" or "false".'
+    required: false
+    default: 'true'
+
+  run-lint:
+    description: 'Whether to run linter. Set to "true" or "false".'
+    required: false
+    default: 'true'
+
+outputs:
+  status:
+    description: 'CI pipeline status summary.'
+
 runs:
-  using: 'node20'
-  main: 'dist/index.js'
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install Dependencies
+      run: npm ci
+      shell: bash
+
+    - name: Run Linter
+      if: ${{ inputs.run-lint == 'true' }}
+      run: npm run lint
+      shell: bash
+
+    - name: Run Tests
+      if: ${{ inputs.run-tests == 'true' }}
+      run: npm test
+      shell: bash
+
+    - name: Set output status
+      run: echo "status=CI completed successfully" >> $GITHUB_OUTPUT
+      shell: bash
