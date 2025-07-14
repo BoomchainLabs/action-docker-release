@@ -4,87 +4,47 @@ const core = require('@actions/core');
 
 class RELEASE{
   #types = {
-    breaking:{title:'# 🚨 Breaking'},
-    break:{ref:'breaking'},
-    fix:{title:'# 🩹 Fix'},
-    feature:{title:'# 🎀 Feature'},
-    add:{ref:'feature'},
-    upgrade:{title:'# 🚀 Upgrade'},
-    update:{ref:'upgrade'},
-    cut:{title:'# ✂️ Cut'},
-    remove:{ref:'cut'},
-    del:{ref:'cut'},
-    comment:{title:'# 🎤 Comment'},
-    unsorted:{title:'# 📘 Unsorted'}
+    breaking:{title:'🚨 Breaking Changes', list:[]},
+    feat:{title:'✨ New Features', list:[]},
+    fix:{title:'🐛 Bug Fixes', list:[]},
+    chore:{title:'🔧 Chores', list:[]},
+    docs:{title:'📄 Documentation', list:[]},
+    refactor:{title:'🔮 Refactoring', list:[]},
+    cut:{title:'✂️ Removed', list:[]},
+    perf:{title:'⏰ Performance Improvements', list:[]},
+    revert:{title:'🔄 Undo Changes', list:[]},
+    style:{title:'🖌 Style Changes', list:[]},
+    test:{title:'🧨 Tests', list:[]},
   }
-
-  #list = {};
-  #regExp = {
-    log:null,
-    unsorted:null,
-    blacklist:null,
-  };
-  #log = '';
-  #blacklist = [
-    `merge branch 'master'`,
-    `auto update README\\.md`,
-  ]
   
   constructor(opt = {}){
-    const aTypes = [];
-    for(const type in this.#types){
-      this.#list[type] = [];
-      aTypes.push(type);
-    }
-
-    const aBlacklist = [];
-    for(const ignore of this.#blacklist){
-      aBlacklist.push(ignore);
-    }
-
-    this.#regExp.log = new RegExp(`^(\\S{7})\\s+\\[(${aTypes.join('|')})\\]\\s+(.+)\\s*`, 'igm');
-    this.#regExp.unsorted = new RegExp(`^(\\S{7})\\s+(?!\\[(${aTypes.join('|')})\\]\\s+)(.+)\\s*`, 'igm');
-    this.#regExp.blacklist = new RegExp(`(${aBlacklist.join('|')})`, 'i');
-
     this.#parseInputs(opt);
     this.#create();
   }
 
-  #parseInputs(opt){
-    if(opt?.git_log){
-      this.#log = `${opt.git_log}`;
-      
-      const aMatches = [...this.#log.matchAll(this.#regExp.log)];
-      if(aMatches && aMatches.length > 0){
-        for(const match of aMatches){
-          if(!this.#regExp.blacklist.test(match[0])){
-            const log = {
-              hash:match[1],
-              type:`${match[2]}`.toLowerCase(),
-              message:match[3],
-            }
-            if(this.#types[log.type]?.ref){
-              log.type = this.#types[log.type].ref;
-            }
-            this.#list[log.type].push(`* ${log.message} - ${log.hash}`);
-          }else{
-            core.info(`blacklisted commit ${match[1]} "${match[3]}"`)
-          }
+  #typeToTypes(type){
+    if(type.match(/\!/i)){
+      return('breaking');
+    }else{
+      for(const key in this.#types){
+        if(type.match(new RegExp(key, 'i'))){
+          return(`${key}`);
         }
       }
+    }
+  }
 
-      const aMatchesUnsorted = [...this.#log.matchAll(this.#regExp.unsorted)];
-      if(aMatchesUnsorted && aMatchesUnsorted.length > 0){
-        for(const match of aMatchesUnsorted){
-          if(!this.#regExp.blacklist.test(match[0])){
-            const log = {
-              hash:match[1],
-              message:match[3],
-            }
-            this.#list.unsorted.push(`* ${log.message} - ${log.hash}`);
-          }else{
-            core.info(`blacklisted commit ${match[1]} "${match[3]}"`)
+  #parseInputs(opt){
+    if(opt?.git_log){      
+      const aMatches = [...`${opt.git_log}`.matchAll(/(\S{7}) ([^:]+): (.+)/igm)];
+      if(aMatches && aMatches.length > 0){
+        for(const match of aMatches){
+          const log = {
+            hash:match[1],
+            type:`${match[2]}`.toLowerCase(),
+            message:match[3],
           }
+          this.#types[this.#typeToTypes(log.type)].list.push(`* ${log.hash} - ${log.message}`);
         }
       }
     }
@@ -92,10 +52,10 @@ class RELEASE{
 
   #create(){
     const release = [];
-    for(const type in this.#list){
-      if(this.#list[type].length > 0){
-        release.push(`${this.#types[type].title}`);
-        for(const row of this.#list[type]){
+    for(const type in this.#types){
+      if(this.#types[type].list.length > 0){
+        release.push(`# ${this.#types[type].title}`);
+        for(const row of this.#types[type].list){
           release.push(row);
         }
         release.push("");
@@ -112,8 +72,15 @@ class RELEASE{
 }
 
 try{
+  const example = `d062133 fix(CI/CD)!: removal of armv7 as non-standard deployment option
+d4d8334 Merge branch 'master' of https://github.com/11notes/docker-netbird
+2a2de68 feat: 11notes/go as build image
+2016f96 feat: new postgres image and yml anchor
+578132e chore: change UVP
+57eb9f3 Merge branch 'master' of https://github.com/11notes/docker-netbird
+6279ff8 [upgrade] latest workflows`;
   const release = new RELEASE({
-    git_log:core.getInput('git_log') || null,
+    git_log:core.getInput('git_log') || example,
   });
 }catch(err){
   core.error(inspect(err, {showHidden:false, depth:null}));
