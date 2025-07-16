@@ -27643,9 +27643,9 @@ class RELEASE{
     (async()=>{
       try{
         const commit = await exec('git', ['rev-list', '--tags', '--skip=1', '--max-count=1']);
-        core.info(`latest commit: ${commit}`);
-        const history = await exec('git', ['describe', '--abbrev=0', '--tags', `${commit}`]);
-        core.info(inspect(history, {showHidden:false, depth:null}));
+        const tag = await exec('git', ['describe', '--abbrev=0', commit]);
+        const commits = await exec('git', ['log', `${commit}..HEAD`, '--oneline']);
+        core.info(inspect({commit:commit, tag:tag, commits:commits}, {showHidden:false, depth:null}));
       }catch(e){
         core.warning(`exception: ${inspect(e, {showHidden:false, depth:null})}`);
       }
