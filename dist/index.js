@@ -27581,6 +27581,7 @@ class RELEASE{
     revert:{title:'🔄 Undo Changes', list:[]},
     style:{title:'🖌 Style Changes', list:[]},
     test:{title:'🧨 Tests', list:[]},
+    undefined:{title:'undefined', list:[]},
   }
   
   constructor(opt = {}){
@@ -27598,6 +27599,7 @@ class RELEASE{
         }
       }
     }
+    return('undefined');
   }
 
   #parseInputs(opt){
@@ -27626,13 +27628,17 @@ class RELEASE{
   #create(){
     const release = [];
     for(const type in this.#types){
-      if(this.#types[type].list.length > 0){
+      if(type != 'undefined' && this.#types[type].list.length > 0){
         release.push(`# ${this.#types[type].title}`);
         for(const row of this.#types[type].list){
           release.push(row);
         }
         release.push("");
       }
+    }
+
+    if(this.#types['undefined'].list.length > 0){
+      core.warning(`undefined has entries: ${inspect(this.#types['undefined'].list, {showHidden:false, depth:null})}`);
     }
 
     if(release.length > 0){
