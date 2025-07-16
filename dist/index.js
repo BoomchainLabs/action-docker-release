@@ -27618,10 +27618,14 @@ class RELEASE{
     }
 
     (async()=>{
-      const tag = await exec.exec('git', ['rev-list', '--tags', '--skip=1', '--max-count=1']);
-      core.info(tag);
-      const commits = await exec.exec('git', ['describe', '--abbrev=0', '--tags', tag]);
-      core.info(inspect(commits, {showHidden:false, depth:null}));
+      try{
+        const commit = await exec.exec('git', ['rev-list', '--tags', '--skip=1', '--max-count=1']);
+        core.info(`latest commit: ${commit}`);
+        const history = await exec.exec('git', ['describe', '--abbrev=0', '--tags', `${commit}`]);
+        core.info(inspect(history, {showHidden:false, depth:null}));
+      }catch(e){
+        core.warning(`exception: ${inspect(e, {showHidden:false, depth:null})}`);
+      }
     })();
   }
 
