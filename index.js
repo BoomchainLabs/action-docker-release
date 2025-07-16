@@ -3,7 +3,7 @@ const { inspect } = require('node:util');
 const core = require('@actions/core');
 const _exec = require('@actions/exec');
 
-const exec = async(bin, arg=[]) => {
+const exec = async(bin, arg=[], stripCRLF=true) => {
   let stdout = '';
   let stderr = '';
 
@@ -27,6 +27,9 @@ const exec = async(bin, arg=[]) => {
   if(stderr.length > 0){
     core.warning(`exec [${bin}] exited with error: ${stderr}`);
     return(false);
+  }
+  if(stripCRLF){
+    stdout = stdout.replace(/[\r\n]*/g, '');
   }
   return(stdout);
 };
@@ -83,8 +86,8 @@ class RELEASE{
     (async()=>{
       try{
         const commit = await exec('git', ['rev-list', '--tags', '--skip=1', '--max-count=1']);
-        const tag = await exec(`git describe --abbrev=0 ${commit}`);
-        const commits = await exec(`git log ${commit}..HEAD --oneline`);
+        const tag = await exec('git ', ['describe', '--abbrev=0', commit]);
+        const commits = await exec('git', ['log', `${commit}..HEAD`, '--oneline'], false);
         core.info(inspect({commit:commit, tag:tag, commits:commits}, {showHidden:false, depth:null}));
       }catch(e){
         core.warning(`exception: ${inspect(e, {showHidden:false, depth:null})}`);
