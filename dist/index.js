@@ -27616,8 +27616,10 @@ class RELEASE{
   }
   
   constructor(opt = {}){
-    this.#parseInputs(opt);
-    this.#create();
+    (async()=>{
+      await this.#parseCommits();
+      this.#create();
+    })();    
   }
 
   #typeToTypes(type){
@@ -27633,31 +27635,29 @@ class RELEASE{
     return('undefined');
   }
 
-  #parseInputs(opt){
-    if(opt?.git_log){      
-      const aMatches = [...`${opt.git_log}`.matchAll(/(\S{7}) ([^:]+): (.+)/igm)];
-      if(aMatches && aMatches.length > 0){
-        for(const match of aMatches){
-          const log = {
-            hash:match[1],
-            type:`${match[2]}`.toLowerCase(),
-            message:match[3],
-          }
-          this.#types[this.#typeToTypes(log.type)].list.push(`* ${log.hash} - ${log.message}`);
-        }
-      }
-    }
-
-    (async()=>{
-      try{
-        const commit = await exec('git', ['rev-list', '--tags', '--skip=1', '--max-count=1']);
+  async #parseCommits(opt){
+    try{
+      const commit = await exec('git', ['rev-list', '--tags', '--skip=1', '--max-count=1']);
+      if(commit){
         const tag = await exec('git ', ['describe', '--abbrev=0', commit]);
         const commits = await exec('git', ['log', `${commit}..HEAD`, '--oneline'], false);
-        core.info(inspect({commit:commit, tag:tag, commits:commits}, {showHidden:false, depth:null}));
-      }catch(e){
-        core.warning(`exception: ${inspect(e, {showHidden:false, depth:null})}`);
+        if(commits){
+          const aMatches = [...commits.matchAll(/(\S{7}) ([^:]+): (.+)/igm)];
+          if(aMatches && aMatches.length > 0){
+            for(const match of aMatches){
+              const log = {
+                hash:match[1],
+                type:`${match[2]}`.toLowerCase(),
+                message:match[3],
+              }
+              this.#types[this.#typeToTypes(log.type)].list.push(`* ${log.hash} - ${log.message}`);
+            }
+          }
+        }
       }
-    })();
+    }catch(e){
+      core.warning(`exception: ${inspect(e, {showHidden:false, depth:null})}`);
+    }
   }
 
   #create(){
@@ -27686,16 +27686,7 @@ class RELEASE{
 }
 
 try{
-  const example = `d062133 fix(CI/CD)!: removal of armv7 as non-standard deployment option
-d4d8334 Merge branch 'master' of https://github.com/11notes/docker-netbird
-2a2de68 feat: 11notes/go as build image
-2016f96 feat: new postgres image and yml anchor
-578132e chore: change UVP
-57eb9f3 Merge branch 'master' of https://github.com/11notes/docker-netbird
-6279ff8 [upgrade] latest workflows`;
-  const release = new RELEASE({
-    git_log:core.getInput('git_log') || example,
-  });
+  const release = new RELEASE();
 }catch(err){
   core.error(inspect(err, {showHidden:false, depth:null}));
   core.setFailed(`action failed with error ${err.message}`);
