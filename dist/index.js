@@ -27566,6 +27566,7 @@ var __webpack_exports__ = {};
 const fs = __nccwpck_require__(3024);
 const { inspect } = __nccwpck_require__(7975);
 const core = __nccwpck_require__(5859);
+const exec = __nccwpck_require__(4803);
 
 class RELEASE{
   #types = {
@@ -27613,6 +27614,13 @@ class RELEASE{
         }
       }
     }
+
+    (async()=>{
+      const tag = await exec.exec('git', ['rev-list', '--tags', '--skip=1', '--max-count=1']);
+      core.info(tag);
+      const commits = await exec.exec('git', ['describe', '--abbrev=0', '--tags', tag]);
+      core.info(inspect(commits, {showHidden:false, depth:null}));
+    })();
   }
 
   #create(){

@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const { inspect } = require('node:util');
 const core = require('@actions/core');
+const exec = require('@actions/exec');
 
 class RELEASE{
   #types = {
@@ -48,6 +49,13 @@ class RELEASE{
         }
       }
     }
+
+    (async()=>{
+      const tag = await exec.exec('git', ['rev-list', '--tags', '--skip=1', '--max-count=1']);
+      core.info(tag);
+      const commits = await exec.exec('git', ['describe', '--abbrev=0', '--tags', tag]);
+      core.info(inspect(commits, {showHidden:false, depth:null}));
+    })();
   }
 
   #create(){
