@@ -18,7 +18,12 @@ const exec = async(bin, arg=[]) => {
     }
   };
 
-  await _exec.exec(bin, arg, options);
+  try{
+    await _exec.exec(bin, arg, options);
+  }catch(e){
+    core.warning(`exec [${bin}] exception: ${e}`);
+    return(false);
+  }
   if(stderr.length > 0){
     core.warning(`exec [${bin}] exited with error: ${stderr}`);
     return(false);
@@ -78,7 +83,7 @@ class RELEASE{
     (async()=>{
       try{
         const commit = await exec('git', ['rev-list', '--tags', '--skip=1', '--max-count=1']);
-        const tag = await exec('git', ['describe', commit]);
+        const tag = await exec('git describe', ['--abbrev=0', commit]);
         const commits = await exec('git', ['log', `${commit}..HEAD`, '--oneline']);
         core.info(inspect({commit:commit, tag:tag, commits:commits}, {showHidden:false, depth:null}));
       }catch(e){
