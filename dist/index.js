@@ -27566,7 +27566,30 @@ var __webpack_exports__ = {};
 const fs = __nccwpck_require__(3024);
 const { inspect } = __nccwpck_require__(7975);
 const core = __nccwpck_require__(5859);
-const exec = __nccwpck_require__(4803);
+const _exec = __nccwpck_require__(4803);
+
+const exec = async(bin, arg=[]) => {
+  let stdout = '';
+  let stderr = '';
+
+  const options = {
+    listeners:{
+      stdout:(data) => {
+        stdout += data.toString();
+      },
+      stderr:(data) => {
+        stderr += data.toString();
+      }
+    }
+  };
+
+  await _exec.exec(bin, arg, options);
+  if(stderr.length > 0){
+    core.warning(`exec [${bin}] exited with error: ${stderr}`);
+    return(false);
+  }
+  return(stdout);
+};
 
 class RELEASE{
   #types = {

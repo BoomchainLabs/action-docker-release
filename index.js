@@ -1,7 +1,30 @@
 const fs = require('node:fs');
 const { inspect } = require('node:util');
 const core = require('@actions/core');
-const exec = require('@actions/exec');
+const _exec = require('@actions/exec');
+
+const exec = async(bin, arg=[]) => {
+  let stdout = '';
+  let stderr = '';
+
+  const options = {
+    listeners:{
+      stdout:(data) => {
+        stdout += data.toString();
+      },
+      stderr:(data) => {
+        stderr += data.toString();
+      }
+    }
+  };
+
+  await _exec.exec(bin, arg, options);
+  if(stderr.length > 0){
+    core.warning(`exec [${bin}] exited with error: ${stderr}`);
+    return(false);
+  }
+  return(stdout);
+};
 
 class RELEASE{
   #types = {
